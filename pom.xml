@@ -92,6 +92,15 @@
             </exclusions>
         </dependency>
 
+        <!-- Netty: compile-time only knowledge of Netty channel types for the
+             packet interceptor. Always provided by the server at runtime. -->
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.97.Final</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- JUnit 5 for unit testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

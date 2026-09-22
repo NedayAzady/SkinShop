@@ -5,6 +5,7 @@ import me.NedayAzady.command.SkinShopCommand;
 import me.NedayAzady.config.ConfigManager;
 import me.NedayAzady.listener.ArenaListener;
 import me.NedayAzady.npc.NPCShopManager;
+import me.NedayAzady.profile.ProfileIsolationManager;
 import me.NedayAzady.skin.SkinManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -24,6 +25,7 @@ public class SkinShop extends JavaPlugin {
     private NPCShopManager npcShopManager;
     private ArenaListener arenaListener;
     private BedWars bedWarsApi;
+    private ProfileIsolationManager profileIsolationManager;
 
     @Override
     public void onEnable() {
@@ -46,6 +48,12 @@ public class SkinShop extends JavaPlugin {
 
         // 3. Initialize skin manager and cache
         this.skinManager = new SkinManager(this);
+
+        // 3b. Team Skin Rendering Fix: isolated per-player GameProfile packet fix
+        this.profileIsolationManager = new ProfileIsolationManager(this);
+        if (configManager.isEnableSkinRenderFix()) {
+            profileIsolationManager.enable();
+        }
 
         // 4. Initialize NPC manager
         this.npcShopManager = new NPCShopManager(this);
@@ -80,6 +88,11 @@ public class SkinShop extends JavaPlugin {
         // Clean up all dynamically created Citizens NPCs
         if (npcShopManager != null) {
             npcShopManager.cleanupAll();
+        }
+
+        // Disarm team skin rendering fix and eject packet interceptors
+        if (profileIsolationManager != null) {
+            profileIsolationManager.shutdown();
         }
 
         // Persist cache to file
@@ -126,6 +139,10 @@ public class SkinShop extends JavaPlugin {
 
     public ArenaListener getArenaListener() {
         return arenaListener;
+    }
+
+    public ProfileIsolationManager getProfileIsolationManager() {
+        return profileIsolationManager;
     }
 
     public BedWars getBedWarsApi() {

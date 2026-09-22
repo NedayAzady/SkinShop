@@ -35,6 +35,15 @@ public class ConfigManager {
     private boolean npcLookHeadOnly;
     private boolean npcLookRealistic;
 
+    // Team Skin Rendering Fix (packet-level per-player profile isolation)
+    private boolean enableSkinRenderFix;
+    private boolean isolateProfiles;
+    private boolean fixPlayerInfo;
+    private boolean fixScoreboardTeam;
+    private boolean fixSpawnWatch;
+    private boolean proactivePushSkins;
+    private boolean renderFixDebug;
+
     private SkinData cachedFallbackSkin;
 
     public ConfigManager(SkinShop plugin) {
@@ -94,6 +103,15 @@ public class ConfigManager {
         this.npcLookPerPlayer = config.getBoolean("npc-look-at-players.per-player", true);
         this.npcLookHeadOnly = config.getBoolean("npc-look-at-players.head-only", true);
         this.npcLookRealistic = config.getBoolean("npc-look-at-players.realistic-looking", true);
+
+        // Parse team skin rendering fix settings
+        this.enableSkinRenderFix = config.getBoolean("team-skin-render-fix.enabled", true);
+        this.isolateProfiles = config.getBoolean("team-skin-render-fix.isolate-profiles", true);
+        this.fixPlayerInfo = config.getBoolean("team-skin-render-fix.fix-player-info", true);
+        this.fixScoreboardTeam = config.getBoolean("team-skin-render-fix.fix-scoreboard-team", true);
+        this.fixSpawnWatch = config.getBoolean("team-skin-render-fix.fix-named-entity-spawn", true);
+        this.proactivePushSkins = config.getBoolean("team-skin-render-fix.proactive-refresh", true);
+        this.renderFixDebug = config.getBoolean("team-skin-render-fix.debug", false);
 
         // Pre-build empty-team fallback skin if VALUE_SIGNATURE or URL
         buildFallbackSkin();
@@ -216,5 +234,33 @@ public class ConfigManager {
 
     public boolean isNpcLookRealistic() {
         return npcLookRealistic;
+    }
+
+    public boolean isEnableSkinRenderFix() {
+        return enableSkinRenderFix;
+    }
+
+    public boolean isIsolateProfiles() {
+        return isolateProfiles;
+    }
+
+    public boolean isFixPlayerInfo() {
+        return fixPlayerInfo;
+    }
+
+    public boolean isFixScoreboardTeam() {
+        return fixScoreboardTeam;
+    }
+
+    public boolean isFixSpawnWatch() {
+        return fixSpawnWatch;
+    }
+
+    public boolean isProactivelyPushSkins() {
+        return proactivePushSkins;
+    }
+
+    public boolean isRenderFixDebug() {
+        return renderFixDebug;
     }
 }

@@ -101,5 +101,42 @@ spawn-citizens-npc-if-missing: true
 # 25 ticks = 1.25 seconds (allows BedWars to finish spawning base entities).
 apply-delay-ticks: 25
 
+# ============================================================================== #
+#                    Team Skin Rendering Fix (packet-level)                      #
+# ============================================================================== #
+# Fixes the BedWars rendering conflict where two teammates with active custom
+# skins can show duplicate / wrong / default textures. The addon keeps each
+# player's GameProfile skin properties (textures + signature) strictly isolated
+# per UUID, fixes outbound player-info (PacketPlayOutPlayerInfo / tablist),
+# named-entity-spawn and scoreboard-team packets, and re-applies the correct
+# skin the moment a player spawns into the arena world.
+team-skin-render-fix:
+  # Master switch for the whole team-skin render fix module.
+  enabled: true
+
+  # Capture and strictly isolate every arena player's own skin texture/signature
+  # per UUID at match init / join. Nothing is ever shared between teammates.
+  isolate-profiles: true
+
+  # Intercept PlayerInfo/tablist packets and re-inject the isolated profile when
+  # one was rebuilt without textures (the root cause of wrong/duplicate skins).
+  fix-player-info: true
+
+  # Watch scoreboard-team packets (team colors / glowing outlines) and refresh
+  # the referenced players' isolated profiles so team assignment never wins over
+  # an individual player's own skin.
+  fix-scoreboard-team: true
+
+  # Before named-entity spawns are delivered, ensure the spawned player's own
+  # isolated profile is present so clients render the correct skin immediately.
+  fix-named-entity-spawn: true
+
+  # Proactively push fully-corrected ADD_PLAYER profile packets on match start
+  # and on first spawn / rejoin (belt & suspenders on top of packet fixing).
+  proactive-refresh: true
+
+  # Log the packet fixes performed for debugging.
+  debug: false
+
 # Enable detailed debug messages in the server console
 debug: false

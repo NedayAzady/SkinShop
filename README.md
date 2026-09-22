@@ -30,6 +30,10 @@
 - **Dual NPC provider support:** works with **Citizens 2** OR **ZNPCsPlus** (`npc-provider: auto`). If both are installed, Citizens is preferred.
 - **Mid-game join handling:**
   - If an initially empty team receives a player mid-game (e.g. rejoin/late assignment), the NPC automatically updates from the fallback skin to that player's skin.
+- **Team Skin Rendering Fix (`team-skin-render-fix`):**
+  - **Unique Player Profile Isolation:** Every arena player's own `GameProfile` skin properties (textures + signature NBT) are captured and kept **strictly isolated per UUID**. Two teammates' skins can never cross-contaminate each other, even when a plugin re-sends a stripped GameProfile.
+  - **Team Packet Sync Fix:** Skin metadata is protected against overwrites from scoreboard-team / tablist packets (`PacketPlayOutPlayerInfo`, `PacketPlayOutScoreboardTeam`, `PacketPlayOutNamedEntitySpawn`) that assign team colors or glowing outlines. A Netty interceptor re-injects each player's own textures whenever one was rebuilt without them.
+  - **Match Join Skin Refresh:** Each player's correct skin properties are re-applied and refreshed immediately upon first spawn / rejoin into the BedWars arena world (plus a proactive corrected `ADD_PLAYER` push at match init).
 - **Zero-Latency Skin Extraction & Caching:**
   - For online players in the match, their skin texture data (value + cryptographic signature) is read directly from their active `GameProfile` in server memory with **0ms network delay** and **no Mojang API rate limits**.
   - For configured usernames or offline lookups, textures are resolved asynchronously via the Mojang API and cached locally in `skin-cache.yml` according to `cache-skins-minutes`.
@@ -157,6 +161,43 @@ spawn-citizens-npc-if-missing: true
 # 25 ticks = 1.25 seconds (allows BedWars to finish spawning base entities).
 apply-delay-ticks: 25
 
+# ============================================================================== #
+#                    Team Skin Rendering Fix (packet-level)                      #
+# ============================================================================== #
+# Fixes the BedWars rendering conflict where two teammates with active custom
+# skins can show duplicate / wrong / default textures. The addon keeps each
+# player's GameProfile skin properties (textures + signature) strictly isolated
+# per UUID, fixes outbound player-info (PacketPlayOutPlayerInfo / tablist),
+# named-entity-spawn and scoreboard-team packets, and re-applies the correct
+# skin the moment a player spawns into the arena world.
+team-skin-render-fix:
+  # Master switch for the whole team-skin render fix module.
+  enabled: true
+
+  # Capture and strictly isolate every arena player's own skin texture/signature
+  # per UUID at match init / join. Nothing is ever shared between teammates.
+  isolate-profiles: true
+
+  # Intercept PlayerInfo/tablist packets and re-inject the isolated profile when
+  # one was rebuilt without textures (the root cause of wrong/duplicate skins).
+  fix-player-info: true
+
+  # Watch scoreboard-team packets (team colors / glowing outlines) and refresh
+  # the referenced players' isolated profiles so team assignment never wins over
+  # an individual player's own skin.
+  fix-scoreboard-team: true
+
+  # Before named-entity spawns are delivered, ensure the spawned player's own
+  # isolated profile is present so clients render the correct skin immediately.
+  fix-named-entity-spawn: true
+
+  # Proactively push fully-corrected ADD_PLAYER profile packets on match start
+  # and on first spawn / rejoin (belt & suspenders on top of packet fixing).
+  proactive-refresh: true
+
+  # Log the packet fixes performed for debugging.
+  debug: false
+
 # Enable detailed debug messages in the server console
 debug: false
 ```
@@ -210,9 +251,10 @@ The following classes and methods from the BedWars1058 API (`com.github.andrei10
 
 | Command | Permission | Description |
 |---------|------------|-------------|
-| `/skinshop reload` | `skinshop.admin` | Reloads `config.yml` and refreshes skin cache |
+| `/skinshop reload` | `skinshop.admin` | Reloads `config.yml` and refreshes skin cache / render-fix |
 | `/skinshop info <arena>` | `skinshop.admin` | Displays current team skin assignments for an arena |
 | `/skinshop update <arena>` | `skinshop.admin` | Forces skin re-application for all teams in an arena |
+| `/skinshop refresh <arena>` | `skinshop.admin` | Forces isolated-profile packet refresh for all players in an arena |
 
 ---
 

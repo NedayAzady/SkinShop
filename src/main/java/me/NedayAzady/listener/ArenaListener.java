@@ -12,6 +12,7 @@ import com.andrei1058.bedwars.api.events.server.ArenaRestartEvent;
 import me.NedayAzady.SkinShop;
 import me.NedayAzady.config.ConfigManager;
 import me.NedayAzady.npc.NPCShopManager;
+import me.NedayAzady.profile.ProfileIsolationManager;
 import me.NedayAzady.skin.SkinData;
 import me.NedayAzady.skin.SkinManager;
 import org.bukkit.Bukkit;
@@ -62,6 +63,7 @@ public class ArenaListener implements Listener {
     private final ConfigManager configManager;
     private final SkinManager skinManager;
     private final NPCShopManager npcShopManager;
+    private final ProfileIsolationManager profileIsolationManager;
 
     // Track assigned player name per team per arena: arenaName -> (teamName -> playerName)
     private final Map<String, Map<String, String>> arenaTeamAssignedPlayer = new ConcurrentHashMap<>();
@@ -71,6 +73,7 @@ public class ArenaListener implements Listener {
         this.configManager = plugin.getConfigurationManager();
         this.skinManager = plugin.getSkinManager();
         this.npcShopManager = plugin.getNpcShopManager();
+        this.profileIsolationManager = plugin.getProfileIsolationManager();
     }
 
     /**
@@ -90,6 +93,12 @@ public class ArenaListener implements Listener {
             //   "Cannot read field 'xLoc' because 'entry' is null" (NMSImpl.sendPositionUpdate).
             // Destroy those stale NPCs now so fresh ones are created after the reset.
             npcShopManager.cleanupArena(arena.getArenaName());
+
+            // Team Skin Rendering Fix: isolate + refresh every member's own GameProfile
+            // skin properties at match init (PacketPlayOutPlayerInfo correctness).
+            if (profileIsolationManager != null) {
+                profileIsolationManager.onArenaStart(arena);
+            }
 
             // Delay skin application slightly so BedWars1058 finishes initializing team bases and NPCs
             long delay = configManager.getApplyDelayTicks();
@@ -215,6 +224,12 @@ public class ArenaListener implements Listener {
         if (arena == null || team == null || player == null) return;
         if (arena.getStatus() != GameState.playing) return;
 
+        // Team Skin Rendering Fix: immediately re-apply and refresh this player's
+        // correct GameProfile skin properties for everyone in the arena world.
+        if (profileIsolationManager != null) {
+            profileIsolationManager.onArenaPlayerJoin(arena, player);
+        }
+
         String arenaName = arena.getArenaName();
         Map<String, String> teamMap = arenaTeamAssignedPlayer.computeIfAbsent(arenaName, k -> new ConcurrentHashMap<>());
         String existingAssigned = teamMap.get(team.getName());
@@ -286,6 +301,9 @@ public class ArenaListener implements Listener {
     private void cleanupArena(String arenaName) {
         if (arenaName != null) {
             arenaTeamAssignedPlayer.remove(arenaName);
+            if (profileIsolationManager != null) {
+                profileIsolationManager.onArenaEnd(arenaName);
+            }
             npcShopManager.cleanupArena(arenaName);
         }
     }

@@ -150,6 +150,14 @@ public class SkinManager {
      * Attempts to read skin textures directly from the online Player GameProfile
      * using CraftPlayer reflection. Works across CraftBukkit / Spigot / Paper versions.
      */
+    public SkinData readSkinFromPlayerProfile(Player player) {
+        return extractSkinFromPlayer(player);
+    }
+
+    /**
+     * Attempts to read skin textures directly from the online Player GameProfile
+     * using CraftPlayer reflection. Works across CraftBukkit / Spigot / Paper versions.
+     */
     private SkinData extractSkinFromPlayer(Player player) {
         try {
             Method getProfileMethod = player.getClass().getMethod("getProfile");

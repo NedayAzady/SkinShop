@@ -46,6 +46,9 @@ public class SkinShopCommand implements CommandExecutor, TabCompleter {
         String sub = args[0].toLowerCase();
         if (sub.equals("reload")) {
             plugin.getConfigurationManager().loadConfig();
+            if (plugin.getProfileIsolationManager() != null) {
+                plugin.getProfileIsolationManager().reload();
+            }
             sender.sendMessage(ChatColor.GREEN + "[SkinShop] Configuration reloaded successfully!");
             return true;
         }
@@ -97,6 +100,27 @@ public class SkinShopCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (sub.equals("refresh")) {
+            if (args.length < 2) {
+                sender.sendMessage(ChatColor.RED + "Usage: /skinshop refresh <arenaName>");
+                return true;
+            }
+            String arenaName = args[1];
+            IArena arena = bwApi.getArenaUtil().getArenaByName(arenaName);
+            if (arena == null) {
+                sender.sendMessage(ChatColor.RED + "[SkinShop] Arena '" + arenaName + "' not found!");
+                return true;
+            }
+
+            if (plugin.getProfileIsolationManager() != null && plugin.getProfileIsolationManager().isEnabled()) {
+                plugin.getProfileIsolationManager().onArenaStart(arena);
+                sender.sendMessage(ChatColor.GREEN + "[SkinShop] Forced isolated profile refresh for arena '" + arenaName + "'.");
+            } else {
+                sender.sendMessage(ChatColor.YELLOW + "[SkinShop] Team skin render fix is disabled; nothing to refresh.");
+            }
+            return true;
+        }
+
         sendHelp(sender);
         return true;
     }
@@ -106,6 +130,7 @@ public class SkinShopCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.YELLOW + "/skinshop reload " + ChatColor.GRAY + "- Reload config.yml");
         sender.sendMessage(ChatColor.YELLOW + "/skinshop info <arena> " + ChatColor.GRAY + "- Show assigned team skins");
         sender.sendMessage(ChatColor.YELLOW + "/skinshop update <arena> " + ChatColor.GRAY + "- Force refresh skins in arena");
+        sender.sendMessage(ChatColor.YELLOW + "/skinshop refresh <arena> " + ChatColor.GRAY + "- Force isolated profile packet refresh");
     }
 
     @Override
@@ -115,12 +140,14 @@ public class SkinShopCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 1) {
-            return Arrays.asList("reload", "info", "update", "help").stream()
+            return Arrays.asList("reload", "info", "update", "refresh", "help").stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
         }
 
-        if (args.length == 2 && (args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("update"))) {
+        if (args.length == 2 && (args[0].equalsIgnoreCase("info")
+                || args[0].equalsIgnoreCase("update")
+                || args[0].equalsIgnoreCase("refresh"))) {
             BedWars bwApi = plugin.getBedWarsApi();
             if (bwApi != null) {
                 return bwApi.getArenaUtil().getArenas().stream()
