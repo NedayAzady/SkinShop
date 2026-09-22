@@ -1,0 +1,19 @@
+name: SkinShop
+main: me.NedayAzady.SkinShop
+version: 1.0.0
+author: NedayAzady
+description: BedWars1058 Shop Keeper Random Team-Skin Addon
+api-version: 1.13
+depend: [BedWars1058]
+softdepend: [Citizens, ZNPCsPlus]
+
+commands:
+  skinshop:
+    description: Main command for BedWars1058 SkinShop Addon
+    permission: skinshop.admin
+    usage: /skinshop [reload|info|update]
+
+permissions:
+  skinshop.admin:
+    description: Allows managing and reloading SkinShop addon
+    default: op

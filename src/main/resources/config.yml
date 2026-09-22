@@ -1,0 +1,105 @@
+# ============================================================================== #
+#                   BedWars1058 Shop Keeper Random Team-Skin Addon               #
+#                               Author: NedayAzady                               #
+# ============================================================================== #
+
+# Fallback skin applied when a team is empty (no players assigned to it,
+# e.g. solo/duo mode with unfilled team slots) or when a skin lookup fails.
+# Skin Name: "Dewier" (default). Applied to empty teams - set the username of the
+# account whose skin should be shown, e.g. "Dewier".
+empty-team-skin:
+  # Source type options:
+  #   - USERNAME         : Fetches the skin of the specified Minecraft account via Mojang API
+  #   - VALUE_SIGNATURE  : Uses raw Base64 texture value & signature data
+  #   - URL              : Uses a direct skin URL (e.g. textures.minecraft.net)
+  type: USERNAME
+
+  # If type is USERNAME:
+  # The Minecraft username whose skin will be applied to empty team shopkeepers.
+  # (Can also specify via 'value' below)
+  username: "Dewier"
+
+  # Shorthand value field (works for USERNAME or URL):
+  value: "Dewier"
+
+  # If type is VALUE_SIGNATURE:
+  # The base64 texture value and cryptographic signature from Mojang.
+  # Example:
+  # texture-value: "ewogICJ0aW1lc3RhbXAiIDog..."
+  # texture-signature: "yW3b..."
+  texture-value: ""
+  texture-signature: ""
+
+  # If type is URL:
+  # Direct URL to the skin texture.
+  # Example: "http://textures.minecraft.net/texture/4679720b523f..."
+  url: ""
+
+# Cache skin textures locally in minutes to prevent hitting Mojang API rate limits.
+# Default: 60 minutes
+cache-skins-minutes: 60
+
+# Apply skins to the regular Team Shopkeeper NPC
+apply-to-shop: true
+
+# Apply skins to the Team Upgrades NPC
+apply-to-upgrades: true
+
+# Re-roll random pick only when the arena (re)starts.
+# When true, mid-game respawns or player joins will keep the team's chosen skin
+# without mid-game re-rolling.
+reroll-only-on-arena-start: true
+
+# ============================================================================== #
+#                  NPC Look-At-Player / Head Rotation Settings                   #
+#                          (bayad kalashoon becharkhe)                           #
+# ============================================================================== #
+npc-look-at-players:
+  # When enabled, shopkeeper & upgrade NPCs will rotate their head/body to look
+  # at approaching players when players are near their base.
+  enabled: true
+
+  # The maximum detection distance (in blocks) within which NPCs will look at players.
+  # Default: 10.0 blocks
+  range: 10.0
+
+  # Per-player packet view:
+  #   - true: Every player will see the NPC looking directly at them individually
+  #           (Hypixel-style per-player head tracking).
+  #   - false: The NPC turns globally towards the closest player in the world.
+  per-player: true
+
+  # Head-only rotation:
+  #   - true: Only the NPC's head rotates towards players; body stays in place.
+  #           (RECOMMENDED. Uses Citizens' cheap head-rotation packet, which avoids
+  #           the 1.8 "Cannot read field 'xLoc'" NPE in Citizens' NMS.)
+  #   - false: Both the NPC's body and head turn towards the player.
+  #           (Uses NMS position packets - can spam errors on old Citizens 1.8.8.)
+  head-only: true
+
+  # Enable smooth and realistic head rotation instead of instant snapping.
+  realistic-looking: true
+
+# NPC provider selection. Which NPC library is used to display player skins on the
+# shopkeeper & upgrade NPCs:
+#   - auto       : Use Citizens if it is installed, otherwise fall back to ZNPCsPlus.
+#   - citizens   : Require Citizens (custom player skins on real NPCs).
+#   - znpcsplus  : Require ZNPCsPlus (packet-based fake NPCs - works without Citizens).
+# Default: auto
+npc-provider: auto
+
+# Citizens NPC support:
+# When enabled and Citizens is present on the server, if BedWars1058 spawned
+# default vanilla villagers, SkinShop will convert/replace them with Citizens
+# Player NPCs so custom player skins can be displayed in-game.
+# Note: This setting only affects the Citizens provider. When falling back to
+# ZNPCsPlus, the default BedWars villagers are hidden (invisibility effect) and
+# kept as the real shop click target, with a skinned fake-player NPC on top.
+spawn-citizens-npc-if-missing: true
+
+# Delay in ticks after arena starts before applying NPC skins.
+# 25 ticks = 1.25 seconds (allows BedWars to finish spawning base entities).
+apply-delay-ticks: 25
+
+# Enable detailed debug messages in the server console
+debug: false
